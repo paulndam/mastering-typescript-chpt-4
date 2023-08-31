@@ -1,5 +1,4 @@
-console.log("hello ")
-
+import * as fs from 'fs';
 // Generics
 // Generics in typescript allows us to write code in a way that it can work with a wide range of objects and primitive data types.
 // Also implements our type guards in this process.
@@ -167,3 +166,207 @@ let recordVal: RecordCd = {
     c: 1,
     d: 2
 }
+
+// CHAPTER 5.
+
+// Asynchronous Language Features.
+
+// To deal with asynchronous request, we use the callback mechanism.
+
+// One of the techniques to write an asynchronous request is by using Promises.
+// Promises allows us to chain multiple async request one after another
+// Another technique is known as the async await.
+
+
+// Callbacks.
+// It executes after an async request has occurred.
+
+function delayResponseWithCallBack(callback: () => void) {
+    function executeAfterTimeOut() {
+        console.log(`5. executeAfterTimeOut()`)
+        callback()
+    }
+    console.log(`2. calling set time out`)
+    setTimeout(executeAfterTimeOut, 1000)
+    console.log(`3. after calling set time out`)
+
+}
+
+function callDelayAndWait() {
+    function afterWait() {
+        console.log(`6. After wait`)
+
+    }
+    console.log(`1. calling delayResponseWithCallBack `)
+    delayResponseWithCallBack(afterWait)
+    console.log(`4. after calling delayResponseWithCallBack`)
+}
+
+// console.log(callDelayAndWait())
+
+
+// Promises.
+
+// Help us get out the nature of callback hell.
+
+// example of callback hell
+fs.readFile("./test1.txt", (err, data) => {
+    if (err) {
+        console.log(`an error occurred : ${err}`);
+    } else {
+        console.log(`test1.txt contents : ${data}`);
+        fs.readFile("./test2.txt", (err, data) => {
+            if (err) {
+                console.log(`an error occurred : ${err}`);
+            } else {
+                console.log(`test2.txt contents : ${data}`);
+                fs.readFile("./test3.txt", (err, data) => {
+                    if (err) {
+                        console.log(`an error occurred : ${err}`);
+                    } else {
+                        console.log(`test3.txt contents
+                            : ${data}`);
+                    }
+                })
+            }
+        })
+    }
+});
+
+// example using promises to solve callback hell issue.
+
+fs.promises.readFile("./test1.txt").then((values) => {
+    console.log(`test1.tx contents : ${values}`)
+    return fs.promises.readFile("./test2.txt")
+}).then((values) => {
+    console.log(`test2.txt contents : ${values}`)
+    return fs.promises.readFile("./test3.txt")
+}).then((values) => {
+    console.log(`test3.txt contents : ${values}`)
+}).catch((error) => {
+    console.log(`Error occurred ${error}`)
+})
+
+
+// creating and writing our own promises.
+
+function fnDelayedPromise(resolve: () => void, reject: () => void) {
+
+    function afterTimeout() {
+        resolve()
+    }
+
+    setTimeout(afterTimeout,5000)
+
+}
+
+// constructing a Promise object.
+
+function delayResponsePromise(): Promise<void> {
+    return new Promise<void>(fnDelayedPromise)
+
+}
+
+function delayPromise(): Promise<void>{
+
+    return new Promise<void>(
+        //constructor.
+        (resolve: () => void, reject: () => void) => {
+            // start of func definition.
+            function afterTimeout() {
+                resolve()
+            }
+            setTimeout(afterTimeout,5000)
+        }
+        // end of constructor
+    )
+}
+
+delayPromise().then(() => {
+    console.log(`Delayed promised returned`)
+})
+
+// Promise error
+function errorPromise(): Promise<void> {
+    return new Promise<void>(
+        (   // constructor
+            resolve: () => void,
+            reject: () => void
+        ) => {
+            // function definition
+            console.log(`2. calling reject()`);
+            reject();
+        }
+    )
+}
+console.log(`1. calling errorPromise()`);
+errorPromise().then(() => { })
+    .catch(() => { console.log(`3. caught an error`) });
+
+
+
+
+// Returning values from Promises.
+
+function returnStringPromise(throwError:boolean): Promise<string>{
+
+    return new Promise<string>(
+        (resolve: (outputVal: string) => void, reject: (errorCode: number) => void) => {
+
+            if (throwError) {
+                 reject(101)
+            }
+
+            resolve("we have a string so we are good 😁")
+
+    })
+}
+
+console.log("1.calling returnStringPromise")
+
+returnStringPromise(false).then((val: string) => {
+    console.log(`2. return value :---> ${val}`)
+}).catch((err: number) => {
+    console.log(`not called`)
+
+})
+
+
+// Decorators.
+//  A decorator is a function, that is called with a specific set of parameters.
+/*
+
+- These params are populated automatically by the javascript run time.
+- These params have data about the class, methods or properties to which the decorator is applied to.
+
+
+*/
+
+// syntax to write decorators.
+
+function simpleDecorator(constructor: Function) {
+    console.log(`simpleDecorator`)
+
+}
+
+function secondDecorator(constructor: Function) {
+    console.log(`secondDecorator called`);
+}
+
+
+
+@simpleDecorator class ClassWithSimpleDecorator {
+
+}
+
+@simpleDecorator
+@secondDecorator
+class ClassWithMultipleDecorators {
+}
+
+
+let instance1 = new ClassWithSimpleDecorator()
+let instance2 = new ClassWithSimpleDecorator()
+
+console.log(`instance 1 ---> ${JSON.stringify(instance1)}`)
+console.log(`instance 2 ---> ${JSON.stringify(instance2)}`)
